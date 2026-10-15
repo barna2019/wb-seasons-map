@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>West Bengal 23 Districts - 6 Seasons Map</title>
-  <!-- D3.js library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
   <style>
     :root {
@@ -97,6 +96,10 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      background: #020617;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.05);
+      overflow: hidden;
     }
 
     svg {
@@ -106,15 +109,16 @@
 
     .district {
       stroke: #030712;
-      stroke-width: 0.8px;
+      stroke-width: 0.7px;
+      stroke-linejoin: round;
       cursor: pointer;
       transition: fill 0.8s ease, stroke 0.2s, filter 0.2s;
     }
 
     .district:hover {
-      stroke: #ffffff;
-      stroke-width: 2px;
-      filter: brightness(1.3);
+      stroke: #ffffff !important;
+      stroke-width: 2px !important;
+      filter: brightness(1.25);
     }
 
     .legend-bar {
@@ -362,7 +366,6 @@
     let isPlaying = true;
     let districtPaths = null;
 
-    // Timeline bar setup
     const timelineEl = document.getElementById('timeline');
     seasonData.forEach((s, idx) => {
       const item = document.createElement('div');
@@ -385,24 +388,33 @@
     const width = 450;
     const height = 620;
 
-    // Load the renamed file directly from the repo root
     d3.json("wb-seasons-map.json").then(geoData => {
       document.getElementById('loading-overlay').style.display = 'none';
 
-      const projection = d3.geoMercator().fitSize([width, height], geoData);
+      // কোনো আউটার বাউন্ডারি বা অতিরিক্ত স্টেট-লেভেল বক্স থাকলে তা বাদ দিয়ে শুধু আসল জেলাগুলোকে নেওয়া
+      const validDistricts = geoData.features.filter(f => {
+        const name = (f.properties.District || f.properties.district || f.properties.name || "").trim().toUpperCase();
+        return name && !name.includes("WEST BENGAL") && !name.includes("TOTAL") && !name.includes("STATE");
+      });
+
+      const cleanGeoData = {
+        type: "FeatureCollection",
+        features: validDistricts.length > 0 ? validDistricts : geoData.features
+      };
+
+      const projection = d3.geoMercator().fitSize([width, height], cleanGeoData);
       const pathGenerator = d3.geoPath().projection(projection);
 
       districtPaths = svg.selectAll(".district")
-        .data(geoData.features)
+        .data(cleanGeoData.features)
         .enter()
         .append("path")
         .attr("class", "district")
         .attr("d", pathGenerator);
 
-      // Tooltip Hover interaction
       const tooltip = document.getElementById("tooltip");
       districtPaths.on("mousemove", (event, d) => {
-        const name = d.properties.District || d.properties.name || "District";
+        const name = d.properties.District || d.properties.district || d.properties.name || "District";
         tooltip.style.left = (event.offsetX + 10) + "px";
         tooltip.style.top = (event.offsetY - 20) + "px";
         tooltip.textContent = name;
@@ -414,7 +426,7 @@
       applySeason(0);
       startLoop();
     }).catch(err => {
-      document.getElementById('loading-overlay').textContent = "Error: wb-seasons-map.json not found in repository root.";
+      document.getElementById('loading-overlay').textContent = "Error: wb-seasons-map.json file not found.";
     });
 
     function matchDistrictColor(dName, colorMap) {
@@ -439,7 +451,7 @@
 
       if (districtPaths) {
         districtPaths.each(function(d, i) {
-          const dName = d.properties.District || d.properties.name;
+          const dName = d.properties.District || d.properties.district || d.properties.name;
           const targetColor = matchDistrictColor(dName, s.colors);
           d3.select(this)
             .transition()
