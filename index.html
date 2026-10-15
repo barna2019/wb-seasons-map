@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>West Bengal 23 Districts - Real Boundary Map</title>
-  <!-- D3.js লাইব্রেরি -->
+  <title>West Bengal 23 Districts - 6 Seasons Map</title>
+  <!-- D3.js library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
   <style>
     :root {
@@ -241,7 +241,6 @@
   </div>
 
   <script>
-    // ৬ ঋতুর কালার প্যালেট ডেটাসেট
     const seasonData = [
       {
         bn: "১. গ্রীষ্মকাল / Grishma (Summer)",
@@ -363,7 +362,7 @@
     let isPlaying = true;
     let districtPaths = null;
 
-    // টাইমলাইন বার তৈরি
+    // Timeline bar setup
     const timelineEl = document.getElementById('timeline');
     seasonData.forEach((s, idx) => {
       const item = document.createElement('div');
@@ -386,11 +385,10 @@
     const width = 450;
     const height = 620;
 
-    // আপনার আপলোড করা ফাইল সরাসরি লোড করা (wb_districts.json)
-    d3.json("wb_districts.json").then(geoData => {
+    // Load the renamed file directly from the repo root
+    d3.json("wb-seasons-map.json").then(geoData => {
       document.getElementById('loading-overlay').style.display = 'none';
 
-      // আপনার আসল জিপিএস কোঅর্ডিনেট অনুযায়ী নিখুঁত প্রজেকশন ফিট
       const projection = d3.geoMercator().fitSize([width, height], geoData);
       const pathGenerator = d3.geoPath().projection(projection);
 
@@ -401,7 +399,7 @@
         .attr("class", "district")
         .attr("d", pathGenerator);
 
-      // Tooltip Hover
+      // Tooltip Hover interaction
       const tooltip = document.getElementById("tooltip");
       districtPaths.on("mousemove", (event, d) => {
         const name = d.properties.District || d.properties.name || "District";
@@ -416,7 +414,7 @@
       applySeason(0);
       startLoop();
     }).catch(err => {
-      document.getElementById('loading-overlay').textContent = "Error: wb_districts.json file not found in repository root.";
+      document.getElementById('loading-overlay').textContent = "Error: wb-seasons-map.json not found in repository root.";
     });
 
     function matchDistrictColor(dName, colorMap) {
