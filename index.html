@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>West Bengal 23 Districts - 6 Seasons Map</title>
-  <!-- D3.js লাইব্রেরি আসল জিওমেট্রি রেন্ডার করার জন্য -->
+  <title>West Bengal 23 Districts - Real Boundary Map</title>
+  <!-- D3.js লাইব্রেরি -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
   <style>
     :root {
@@ -19,7 +19,7 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     body {
@@ -34,12 +34,12 @@
 
     .container {
       width: 100%;
-      max-width: 500px;
+      max-width: 520px;
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 20px;
       padding: 20px;
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.85);
       position: relative;
     }
 
@@ -93,7 +93,7 @@
     .map-wrapper {
       position: relative;
       width: 100%;
-      height: 520px;
+      height: 560px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -113,8 +113,8 @@
 
     .district:hover {
       stroke: #ffffff;
-      stroke-width: 1.8px;
-      filter: brightness(1.25);
+      stroke-width: 2px;
+      filter: brightness(1.3);
     }
 
     .legend-bar {
@@ -145,7 +145,7 @@
     .timeline-pillar {
       width: 100%;
       background: #1e293b;
-      height: 22px;
+      height: 20px;
       border-radius: 3px;
       transition: background 0.3s;
     }
@@ -189,8 +189,8 @@
       background: rgba(3, 7, 18, 0.95);
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 5px 9px;
-      font-size: 0.72rem;
+      padding: 6px 10px;
+      font-size: 0.75rem;
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.15s ease;
@@ -212,23 +212,23 @@
     <div class="header">
       <div class="title">
         <h1>West Bengal Map</h1>
-        <p>23 Districts Real GIS Boundaries & 6 Seasons</p>
+        <p>Official 23 Districts GIS Boundary & 6 Seasons</p>
       </div>
       <div class="badge">
         <div class="metric" id="metric-val">42°C</div>
-        <div class="sub" id="metric-lbl">Peak Temperature</div>
+        <div class="sub" id="metric-lbl">রাঢ় অঞ্চলে তাপপ্রবাহ</div>
       </div>
     </div>
 
     <div class="season-info">
-      <div class="season-name" id="s-name">1. Grishma (Summer)</div>
-      <div class="season-sub" id="s-sub">Boishakh — Joishtho | High Heatwave</div>
+      <div class="season-name" id="s-name">১. গ্রীষ্মকাল (Summer)</div>
+      <div class="season-sub" id="s-sub">বৈশাখ — জ্যৈষ্ঠ | চরম উষ্ণতা ও কালবৈশাখী</div>
     </div>
 
     <div class="map-wrapper">
       <div id="tooltip" class="tooltip"></div>
       <div id="loading-overlay">Loading authentic district boundaries...</div>
-      <svg id="wb-svg" viewBox="0 0 450 560"></svg>
+      <svg id="wb-svg" viewBox="0 0 450 620"></svg>
     </div>
 
     <div class="legend-bar" id="legend-strip"></div>
@@ -236,120 +236,124 @@
 
     <div class="footer">
       <button class="btn" id="play-btn" onclick="togglePlay()">Pause</button>
-      <span style="font-size: 0.68rem; color: var(--muted);">Authentic Survey GIS Map</span>
+      <span style="font-size: 0.68rem; color: var(--muted);">Official Survey Boundaries</span>
     </div>
   </div>
 
   <script>
+    // ৬ ঋতুর কালার প্যালেট ডেটাসেট
     const seasonData = [
       {
-        bn: "1. Grishma (গ্রীষ্মকাল / Summer)",
-        tag: "Grishma",
-        sub: "Boishakh — Joishtho | High Heatwave in Western Rarh",
-        metric: "43°C",
-        lbl: "Purulia/Bankura Peak Heat",
+        bn: "১. গ্রীষ্মকাল / Grishma (Summer)",
+        tag: "গ্রীষ্ম",
+        sub: "বৈশাখ — জ্যৈষ্ঠ | রাঢ় অঞ্চলে তীব্র দাবদাহ",
+        metric: "৪২° সে",
+        lbl: "পুরুলিয়া ও বাঁকুড়ায় সর্বোচ্চ তাপ",
         grad: "linear-gradient(to right, #facc15, #ea580c, #7f1d1d)",
         colors: {
-          "Purulia": "#7f1d1d", "Bankura": "#991b1b", "Jhargram": "#991b1b",
-          "Paschim Bardhaman": "#b91c1c", "Birbhum": "#dc2626", "Paschim Medinipur": "#dc2626",
-          "Purba Bardhaman": "#ea580c", "Hooghly": "#ea580c", "Howrah": "#ea580c", "Kolkata": "#ea580c",
-          "Nadia": "#f97316", "Murshidabad": "#f97316", "Maldah": "#f97316", "Malda": "#f97316",
-          "North 24 Parganas": "#f97316", "South 24 Parganas": "#f97316", "Purba Medinipur": "#f97316",
-          "Uttar Dinajpur": "#fb923c", "Dakshin Dinajpur": "#fb923c",
-          "Koch Bihar": "#facc15", "Coochbehar": "#facc15", "Alipurduar": "#facc15", "Jalpaiguri": "#facc15",
-          "Kalimpong": "#fde047", "Darjeeling": "#fef08a", "Darjiling": "#fef08a"
+          "PURULIA": "#7f1d1d", "BANKURA": "#991b1b", "JHARGRAM": "#991b1b",
+          "PASCHIM BARDHAMAN": "#b91c1c", "BIRBHUM": "#dc2626", "PASCHIM MEDINIPUR": "#dc2626",
+          "PURBA BARDHAMAN": "#ea580c", "HOOGHLY": "#ea580c", "HUGLI": "#ea580c", "HOWRAH": "#ea580c", 
+          "HAORA": "#ea580c", "KOLKATA": "#ea580c", "NORTH 24 PARGANAS": "#f97316", "SOUTH 24 PARGANAS": "#f97316",
+          "NADIA": "#f97316", "MURSHIDABAD": "#f97316", "MALDAH": "#f97316", "MALDA": "#f97316",
+          "UTTAR DINAJPUR": "#fb923c", "DAKSHIN DINAJPUR": "#fb923c", "COOCH BEHAR": "#facc15", 
+          "KOCH BIHAR": "#facc15", "ALIPURDUAR": "#facc15", "ALIPUR DUAR": "#facc15", "JALPAIGURI": "#facc15",
+          "KALIMPONG": "#fde047", "DARJEELING": "#fef08a", "DARJILING": "#fef08a"
         }
       },
       {
-        bn: "2. Barsha (বর্ষাকাল / Monsoon)",
-        tag: "Barsha",
-        sub: "Asharh — Srabon | Heavy Rainfall in Dooars & Sundarban",
-        metric: "380mm",
-        lbl: "Sub-Himalayan Rain",
+        bn: "২. বর্ষাকাল / Barsha (Monsoon)",
+        tag: "বর্ষা",
+        sub: "আষাঢ় — শ্রাবণ | ডুয়ার্স ও সুন্দরবনে অতিবৃষ্টি",
+        metric: "৩৮০ মিমি",
+        lbl: "উত্তরবঙ্গে সক্রিয় মৌসুমি বায়ু",
         grad: "linear-gradient(to right, #082f49, #0284c7, #38bdf8)",
         colors: {
-          "Alipurduar": "#38bdf8", "Jalpaiguri": "#38bdf8", "Kalimpong": "#0284c7",
-          "Darjeeling": "#0284c7", "Darjiling": "#0284c7", "Koch Bihar": "#38bdf8", "Coochbehar": "#38bdf8",
-          "Uttar Dinajpur": "#0284c7", "Dakshin Dinajpur": "#0369a1", "Maldah": "#0369a1", "Malda": "#0369a1",
-          "Murshidabad": "#075985", "Nadia": "#0369a1", "North 24 Parganas": "#0284c7", "South 24 Parganas": "#38bdf8",
-          "Kolkata": "#0284c7", "Howrah": "#0284c7", "Hooghly": "#0369a1",
-          "Purba Medinipur": "#0284c7", "Paschim Medinipur": "#075985",
-          "Purba Bardhaman": "#075985", "Paschim Bardhaman": "#0c4a6e",
-          "Birbhum": "#0c4a6e", "Bankura": "#082f49", "Purulia": "#082f49", "Jhargram": "#0c4a6e"
+          "ALIPURDUAR": "#38bdf8", "ALIPUR DUAR": "#38bdf8", "JALPAIGURI": "#38bdf8", 
+          "KALIMPONG": "#0284c7", "DARJEELING": "#0284c7", "DARJILING": "#0284c7", 
+          "COOCH BEHAR": "#38bdf8", "KOCH BIHAR": "#38bdf8", "UTTAR DINAJPUR": "#0284c7", 
+          "DAKSHIN DINAJPUR": "#0369a1", "MALDAH": "#0369a1", "MALDA": "#0369a1",
+          "MURSHIDABAD": "#075985", "NADIA": "#0369a1", "NORTH 24 PARGANAS": "#0284c7", 
+          "SOUTH 24 PARGANAS": "#38bdf8", "KOLKATA": "#0284c7", "HOWRAH": "#0284c7", 
+          "HAORA": "#0284c7", "HOOGHLY": "#0369a1", "HUGLI": "#0369a1", "PURBA MEDINIPUR": "#0284c7", 
+          "PASCHIM MEDINIPUR": "#075985", "PURBA BARDHAMAN": "#075985", "PASCHIM BARDHAMAN": "#0c4a6e",
+          "BIRBHUM": "#0c4a6e", "BANKURA": "#082f49", "PURULIA": "#082f49", "JHARGRAM": "#0c4a6e"
         }
       },
       {
-        bn: "3. Sharat (শরৎকাল / Autumn)",
-        tag: "Sharat",
-        sub: "Bhadro — Ashwin | Kashful, Clear Blue Skies & Durga Puja",
-        metric: "Clear Sky",
-        lbl: "Festive Season",
+        bn: "৩. শরৎকাল / Sharat (Autumn)",
+        tag: "শরৎ",
+        sub: "ভাদ্র — আশ্বিন | কাশফুল, নীল আকাশ ও পুজো",
+        metric: "উৎসবমুখর",
+        lbl: "স্বচ্ছ আকাশ ও শুভ্র মেঘ",
         grad: "linear-gradient(to right, #064e3b, #10b981, #6ee7b7)",
         colors: {
-          "Kolkata": "#6ee7b7", "Howrah": "#6ee7b7", "Hooghly": "#6ee7b7",
-          "North 24 Parganas": "#34d399", "South 24 Parganas": "#34d399", "Nadia": "#34d399",
-          "Purba Bardhaman": "#34d399", "Paschim Bardhaman": "#10b981", "Murshidabad": "#10b981",
-          "Birbhum": "#10b981", "Bankura": "#10b981", "Purulia": "#059669",
-          "Jhargram": "#059669", "Paschim Medinipur": "#10b981", "Purba Medinipur": "#34d399",
-          "Maldah": "#059669", "Malda": "#059669", "Uttar Dinajpur": "#059669", "Dakshin Dinajpur": "#059669",
-          "Koch Bihar": "#047857", "Coochbehar": "#047857", "Jalpaiguri": "#047857", "Alipurduar": "#047857",
-          "Kalimpong": "#065f46", "Darjeeling": "#064e3b", "Darjiling": "#064e3b"
+          "KOLKATA": "#6ee7b7", "HOWRAH": "#6ee7b7", "HAORA": "#6ee7b7", "HOOGHLY": "#6ee7b7", 
+          "HUGLI": "#6ee7b7", "NORTH 24 PARGANAS": "#34d399", "SOUTH 24 PARGANAS": "#34d399", 
+          "NADIA": "#34d399", "PURBA BARDHAMAN": "#34d399", "PASCHIM BARDHAMAN": "#10b981", 
+          "MURSHIDABAD": "#10b981", "BIRBHUM": "#10b981", "BANKURA": "#10b981", "PURULIA": "#059669",
+          "JHARGRAM": "#059669", "PASCHIM MEDINIPUR": "#10b981", "PURBA MEDINIPUR": "#34d399",
+          "MALDAH": "#059669", "MALDA": "#059669", "UTTAR DINAJPUR": "#059669", 
+          "DAKSHIN DINAJPUR": "#059669", "COOCH BEHAR": "#047857", "KOCH BIHAR": "#047857", 
+          "JALPAIGURI": "#047857", "ALIPURDUAR": "#047857", "ALIPUR DUAR": "#047857",
+          "KALIMPONG": "#065f46", "DARJEELING": "#064e3b", "DARJILING": "#064e3b"
         }
       },
       {
-        bn: "4. Hemanta (হেমন্তকাল / Late Autumn)",
-        tag: "Hemanta",
-        sub: "Kartik — Agrahayan | Golden Harvest (Nabanna) in Bengal",
-        metric: "Harvest Hue",
-        lbl: "Paddy Fields of Bengal",
+        bn: "৪. হেমন্তকাল / Hemanta (Late Autumn)",
+        tag: "হেমন্ত",
+        sub: "কার্তিক — অগ্রহায়ণ | সোনালী পাকা ধান ও নবান্ন",
+        metric: "সোনালী ধান",
+        lbl: "বর্ধমান ও দক্ষিণবঙ্গের নবান্ন",
         grad: "linear-gradient(to right, #78350f, #d97706, #fde68a)",
         colors: {
-          "Purba Bardhaman": "#fde68a", "Hooghly": "#fde68a", "Nadia": "#fde68a",
-          "Paschim Medinipur": "#fde68a", "Murshidabad": "#f59e0b", "Birbhum": "#f59e0b",
-          "Purba Medinipur": "#f59e0b", "Howrah": "#f59e0b", "North 24 Parganas": "#f59e0b",
-          "South 24 Parganas": "#d97706", "Kolkata": "#f59e0b", "Bankura": "#d97706",
-          "Paschim Bardhaman": "#d97706", "Maldah": "#d97706", "Malda": "#d97706",
-          "Dakshin Dinajpur": "#d97706", "Purulia": "#b45309", "Jhargram": "#b45309",
-          "Uttar Dinajpur": "#b45309", "Koch Bihar": "#b45309", "Coochbehar": "#b45309",
-          "Jalpaiguri": "#92400e", "Alipurduar": "#92400e", "Kalimpong": "#78350f",
-          "Darjeeling": "#78350f", "Darjiling": "#78350f"
+          "PURBA BARDHAMAN": "#fde68a", "HOOGHLY": "#fde68a", "HUGLI": "#fde68a", "NADIA": "#fde68a",
+          "PASCHIM MEDINIPUR": "#fde68a", "MURSHIDABAD": "#f59e0b", "BIRBHUM": "#f59e0b",
+          "PURBA MEDINIPUR": "#f59e0b", "HOWRAH": "#f59e0b", "HAORA": "#f59e0b", 
+          "NORTH 24 PARGANAS": "#f59e0b", "SOUTH 24 PARGANAS": "#d97706", "KOLKATA": "#f59e0b", 
+          "BANKURA": "#d97706", "PASCHIM BARDHAMAN": "#d97706", "MALDAH": "#d97706", "MALDA": "#d97706",
+          "DAKSHIN DINAJPUR": "#d97706", "PURULIA": "#b45309", "JHARGRAM": "#b45309", 
+          "UTTAR DINAJPUR": "#b45309", "COOCH BEHAR": "#b45309", "KOCH BIHAR": "#b45309",
+          "JALPAIGURI": "#92400e", "ALIPURDUAR": "#92400e", "ALIPUR DUAR": "#92400e",
+          "KALIMPONG": "#78350f", "DARJEELING": "#78350f", "DARJILING": "#78350f"
         }
       },
       {
-        bn: "5. Sheet (শীতকাল / Winter)",
-        tag: "Sheet",
-        sub: "Poush — Magh | Frost in Darjeeling, Cold Wave in Rarh",
-        metric: "3°C",
-        lbl: "Sandakphu Chill",
+        bn: "৫. শীতকাল / Sheet (Winter)",
+        tag: "শীত",
+        sub: "পৌষ — মাঘ | পাহাড়ে বরফ ও রাঢ়ে শৈত্যপ্রবাহ",
+        metric: "৩° সে",
+        lbl: "দার্জিলিং পাহাড়ে শৈত্য",
         grad: "linear-gradient(to right, #1e1b4b, #6366f1, #e0e7ff)",
         colors: {
-          "Darjeeling": "#e0e7ff", "Darjiling": "#e0e7ff", "Kalimpong": "#c7d2fe",
-          "Jalpaiguri": "#a5b4fc", "Alipurduar": "#a5b4fc", "Koch Bihar": "#818cf8", "Coochbehar": "#818cf8",
-          "Uttar Dinajpur": "#818cf8", "Dakshin Dinajpur": "#6366f1", "Maldah": "#6366f1", "Malda": "#6366f1",
-          "Purulia": "#3730a3", "Bankura": "#3730a3", "Birbhum": "#4338ca", "Jhargram": "#3730a3",
-          "Paschim Bardhaman": "#4338ca", "Purba Bardhaman": "#4f46e5", "Murshidabad": "#4f46e5",
-          "Nadia": "#4f46e5", "Hooghly": "#6366f1", "Howrah": "#6366f1",
-          "Kolkata": "#6366f1", "North 24 Parganas": "#6366f1", "Purba Medinipur": "#6366f1",
-          "Paschim Medinipur": "#4338ca", "South 24 Parganas": "#4f46e5"
+          "DARJEELING": "#e0e7ff", "DARJILING": "#e0e7ff", "KALIMPONG": "#c7d2fe", 
+          "JALPAIGURI": "#a5b4fc", "ALIPURDUAR": "#a5b4fc", "ALIPUR DUAR": "#a5b4fc", 
+          "COOCH BEHAR": "#818cf8", "KOCH BIHAR": "#818cf8", "UTTAR DINAJPUR": "#818cf8", 
+          "DAKSHIN DINAJPUR": "#6366f1", "MALDAH": "#6366f1", "MALDA": "#6366f1", 
+          "PURULIA": "#3730a3", "BANKURA": "#3730a3", "BIRBHUM": "#4338ca", "JHARGRAM": "#3730a3",
+          "PASCHIM BARDHAMAN": "#4338ca", "PURBA BARDHAMAN": "#4f46e5", "MURSHIDABAD": "#4f46e5",
+          "NADIA": "#4f46e5", "HOOGHLY": "#6366f1", "HUGLI": "#6366f1", "HOWRAH": "#6366f1", 
+          "HAORA": "#6366f1", "KOLKATA": "#6366f1", "NORTH 24 PARGANAS": "#6366f1", 
+          "PURBA MEDINIPUR": "#6366f1", "PASCHIM MEDINIPUR": "#4338ca", "SOUTH 24 PARGANAS": "#4f46e5"
         }
       },
       {
-        bn: "6. Basanta (বসন্তকাল / Spring)",
-        tag: "Basanta",
-        sub: "Falgun — Choitro | Red Palash Blooms in Purulia & Bankura",
-        metric: "Palash Red",
-        lbl: "Spring Equinox Bloom",
+        bn: "৬. বসন্তকাল / Basanta (Spring)",
+        tag: "বসন্ত",
+        sub: "ফাল্গুন — চৈত্র | জঙ্গলমহলে পলাশের মেলা",
+        metric: "পলাশের রঙ",
+        lbl: "পুরুলিয়া ও শান্তিনিকেতনে বসন্তোৎসব",
         grad: "linear-gradient(to right, #831843, #db2777, #f472b6)",
         colors: {
-          "Purulia": "#f43f5e", "Bankura": "#f43f5e", "Jhargram": "#f43f5e",
-          "Birbhum": "#fb7185", "Paschim Bardhaman": "#e11d48", "Paschim Medinipur": "#fb7185",
-          "Purba Bardhaman": "#ec4899", "Nadia": "#f472b6", "Hooghly": "#ec4899",
-          "Howrah": "#ec4899", "Kolkata": "#f472b6", "Purba Medinipur": "#db2777",
-          "North 24 Parganas": "#ec4899", "South 24 Parganas": "#db2777",
-          "Murshidabad": "#db2777", "Maldah": "#db2777", "Malda": "#db2777",
-          "Dakshin Dinajpur": "#be185d", "Uttar Dinajpur": "#be185d",
-          "Koch Bihar": "#be185d", "Coochbehar": "#be185d", "Jalpaiguri": "#9d174d",
-          "Alipurduar": "#9d174d", "Kalimpong": "#9d174d", "Darjeeling": "#831843", "Darjiling": "#831843"
+          "PURULIA": "#f43f5e", "BANKURA": "#f43f5e", "JHARGRAM": "#f43f5e", 
+          "BIRBHUM": "#fb7185", "PASCHIM BARDHAMAN": "#e11d48", "PASCHIM MEDINIPUR": "#fb7185",
+          "PURBA BARDHAMAN": "#ec4899", "NADIA": "#f472b6", "HOOGHLY": "#ec4899", "HUGLI": "#ec4899",
+          "HOWRAH": "#ec4899", "HAORA": "#ec4899", "KOLKATA": "#f472b6", "PURBA MEDINIPUR": "#db2777",
+          "NORTH 24 PARGANAS": "#ec4899", "SOUTH 24 PARGANAS": "#db2777", "MURSHIDABAD": "#db2777",
+          "MALDAH": "#db2777", "MALDA": "#db2777", "DAKSHIN DINAJPUR": "#be185d", 
+          "UTTAR DINAJPUR": "#be185d", "COOCH BEHAR": "#be185d", "KOCH BIHAR": "#be185d", 
+          "JALPAIGURI": "#9d174d", "ALIPURDUAR": "#9d174d", "ALIPUR DUAR": "#9d174d", 
+          "KALIMPONG": "#9d174d", "DARJEELING": "#831843", "DARJILING": "#831843"
         }
       }
     ];
@@ -359,7 +363,7 @@
     let isPlaying = true;
     let districtPaths = null;
 
-    // Timeline বার তৈরি
+    // টাইমলাইন বার তৈরি
     const timelineEl = document.getElementById('timeline');
     seasonData.forEach((s, idx) => {
       const item = document.createElement('div');
@@ -380,15 +384,13 @@
 
     const svg = d3.select("#wb-svg");
     const width = 450;
-    const height = 560;
+    const height = 620;
 
-    // অফিশিয়াল ও সম্পূর্ণ নির্ভরযোগ্য West Bengal Districts GeoJSON (GitHub Pages-এ এটি কখনো ব্লক হয় না)
-    const WB_GEOJSON = "https://raw.githubusercontent.com/HindustanTimesLabs/shapefiles/master/state_ut/westbengal/district/westbengal_district.json";
-
-    d3.json(WB_GEOJSON).then(geoData => {
+    // আপনার আপলোড করা ফাইল সরাসরি লোড করা (wb_districts.json)
+    d3.json("wb_districts.json").then(geoData => {
       document.getElementById('loading-overlay').style.display = 'none';
 
-      // নিখুঁত বাউন্ডারি প্রোজেকশন
+      // আপনার আসল জিপিএস কোঅর্ডিনেট অনুযায়ী নিখুঁত প্রজেকশন ফিট
       const projection = d3.geoMercator().fitSize([width, height], geoData);
       const pathGenerator = d3.geoPath().projection(projection);
 
@@ -402,7 +404,7 @@
       // Tooltip Hover
       const tooltip = document.getElementById("tooltip");
       districtPaths.on("mousemove", (event, d) => {
-        const name = d.properties.district || d.properties.NAME_2 || d.properties.dtname || "District";
+        const name = d.properties.District || d.properties.name || "District";
         tooltip.style.left = (event.offsetX + 10) + "px";
         tooltip.style.top = (event.offsetY - 20) + "px";
         tooltip.textContent = name;
@@ -414,14 +416,14 @@
       applySeason(0);
       startLoop();
     }).catch(err => {
-      document.getElementById('loading-overlay').textContent = "Map boundary load error. Check internet connection.";
+      document.getElementById('loading-overlay').textContent = "Error: wb_districts.json file not found in repository root.";
     });
 
     function matchDistrictColor(dName, colorMap) {
       if (!dName) return "#38bdf8";
-      const clean = dName.toLowerCase().replace(/[^a-z]/g, '');
+      const clean = dName.toUpperCase().replace(/[^A-Z]/g, '');
       for (let k in colorMap) {
-        const target = k.toLowerCase().replace(/[^a-z]/g, '');
+        const target = k.toUpperCase().replace(/[^A-Z]/g, '');
         if (clean.includes(target) || target.includes(clean)) {
           return colorMap[k];
         }
@@ -439,11 +441,11 @@
 
       if (districtPaths) {
         districtPaths.each(function(d, i) {
-          const dName = d.properties.district || d.properties.NAME_2 || d.properties.dtname;
+          const dName = d.properties.District || d.properties.name;
           const targetColor = matchDistrictColor(dName, s.colors);
           d3.select(this)
             .transition()
-            .delay(i * 15)
+            .delay(i * 12)
             .duration(650)
             .style("fill", targetColor);
         });
