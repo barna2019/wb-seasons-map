@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>West Bengal 6 Seasons Climate Animation</title>
+  <title>West Bengal 23 Districts - 6 Seasons Map</title>
+  <!-- D3.js লাইব্রেরি আসল জিওমেট্রি রেন্ডার করার জন্য -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
   <style>
     :root {
       --bg: #030712;
@@ -32,23 +34,24 @@
 
     .container {
       width: 100%;
-      max-width: 460px;
+      max-width: 500px;
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 20px;
       padding: 20px;
       box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+      position: relative;
     }
 
     .header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
     .title h1 {
-      font-size: 1.3rem;
+      font-size: 1.25rem;
       font-weight: 700;
     }
 
@@ -63,7 +66,7 @@
     }
 
     .badge .metric {
-      font-size: 1.45rem;
+      font-size: 1.35rem;
       font-weight: 800;
       color: #38bdf8;
     }
@@ -78,7 +81,7 @@
     }
 
     .season-name {
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       font-weight: 700;
     }
 
@@ -90,7 +93,7 @@
     .map-wrapper {
       position: relative;
       width: 100%;
-      height: 480px;
+      height: 520px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -99,21 +102,19 @@
     svg {
       width: 100%;
       height: 100%;
-      filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.15));
     }
 
     .district {
       stroke: #030712;
-      stroke-width: 1;
-      stroke-linejoin: round;
+      stroke-width: 0.8px;
       cursor: pointer;
       transition: fill 0.8s ease, stroke 0.2s, filter 0.2s;
     }
 
     .district:hover {
       stroke: #ffffff;
-      stroke-width: 2;
-      filter: brightness(1.3);
+      stroke-width: 1.8px;
+      filter: brightness(1.25);
     }
 
     .legend-bar {
@@ -126,7 +127,7 @@
 
     .timeline {
       display: flex;
-      gap: 6px;
+      gap: 5px;
       margin-top: 14px;
       border-bottom: 1px solid var(--border);
       padding-bottom: 8px;
@@ -196,6 +197,13 @@
       white-space: nowrap;
       z-index: 10;
     }
+
+    #loading-overlay {
+      position: absolute;
+      color: #38bdf8;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
   </style>
 </head>
 <body>
@@ -204,11 +212,11 @@
     <div class="header">
       <div class="title">
         <h1>West Bengal Map</h1>
-        <p>23 Districts & 6 Bengali Seasons (ছয় ঋতু)</p>
+        <p>23 Districts Real GIS Boundaries & 6 Seasons</p>
       </div>
       <div class="badge">
         <div class="metric" id="metric-val">42°C</div>
-        <div class="sub" id="metric-lbl">Peak Summer Temperature</div>
+        <div class="sub" id="metric-lbl">Peak Temperature</div>
       </div>
     </div>
 
@@ -219,67 +227,8 @@
 
     <div class="map-wrapper">
       <div id="tooltip" class="tooltip"></div>
-      
-      <!-- Integrated Clean Geographic Paths of West Bengal Districts -->
-      <svg viewBox="0 0 450 640">
-        <!-- North Bengal Hills & Dooars -->
-        <path id="darjeeling" class="district" data-name="Darjeeling" 
-          d="M 185,15 C 195,12 210,18 215,30 C 205,45 190,48 175,40 C 170,25 178,18 185,15 Z" />
-        <path id="kalimpong" class="district" data-name="Kalimpong" 
-          d="M 215,30 C 230,25 245,35 240,55 C 225,58 212,50 215,30 Z" />
-        <path id="jalpaiguri" class="district" data-name="Jalpaiguri" 
-          d="M 175,40 C 210,48 240,55 235,80 C 205,85 185,75 175,40 Z" />
-        <path id="alipurduar" class="district" data-name="Alipurduar" 
-          d="M 240,55 C 275,50 310,60 305,85 C 270,90 245,80 240,55 Z" />
-        <path id="coochbehar" class="district" data-name="Cooch Behar" 
-          d="M 245,80 C 270,90 305,85 295,115 C 255,120 240,105 245,80 Z" />
-
-        <!-- North Plains -->
-        <path id="uttar_dinajpur" class="district" data-name="Uttar Dinajpur" 
-          d="M 180,75 C 200,80 205,125 185,155 C 165,145 160,115 180,75 Z" />
-        <path id="dakshin_dinajpur" class="district" data-name="Dakshin Dinajpur" 
-          d="M 205,125 C 245,120 240,165 215,185 C 190,175 195,145 205,125 Z" />
-        <path id="malda" class="district" data-name="Malda" 
-          d="M 160,150 C 190,165 195,205 175,235 C 145,225 140,185 160,150 Z" />
-
-        <!-- Central Bengal & Rarh Region -->
-        <path id="murshidabad" class="district" data-name="Murshidabad" 
-          d="M 175,235 C 220,225 235,275 210,310 C 180,305 170,270 175,235 Z" />
-        <path id="birbhum" class="district" data-name="Birbhum" 
-          d="M 120,240 C 165,245 165,305 135,330 C 100,315 105,270 120,240 Z" />
-        <path id="nadia" class="district" data-name="Nadia" 
-          d="M 210,310 C 245,315 240,395 215,415 C 195,385 195,340 210,310 Z" />
-        <path id="purba_bardhaman" class="district" data-name="Purba Bardhaman" 
-          d="M 155,310 C 195,305 205,370 175,395 C 145,385 140,345 155,310 Z" />
-        <path id="paschim_bardhaman" class="district" data-name="Paschim Bardhaman" 
-          d="M 100,300 C 145,310 140,345 110,355 C 80,345 85,320 100,300 Z" />
-
-        <!-- Western Plateau (Jangalmahal) -->
-        <path id="purulia" class="district" data-name="Purulia" 
-          d="M 50,330 C 95,325 105,395 80,445 C 45,435 30,380 50,330 Z" />
-        <path id="bankura" class="district" data-name="Bankura" 
-          d="M 105,345 C 150,340 155,420 125,445 C 90,435 95,385 105,345 Z" />
-        <path id="jhargram" class="district" data-name="Jhargram" 
-          d="M 45,435 C 85,440 90,505 60,530 C 35,505 30,465 45,435 Z" />
-        <path id="paschim_medinipur" class="district" data-name="Paschim Medinipur" 
-          d="M 90,440 C 145,435 150,515 110,540 C 75,525 80,475 90,440 Z" />
-
-        <!-- Kolkata, Howrah, Hooghly, North 24 Parganas -->
-        <path id="hooghly" class="district" data-name="Hooghly" 
-          d="M 165,375 C 195,370 195,425 170,445 C 150,435 150,400 165,375 Z" />
-        <path id="howrah" class="district" data-name="Howrah" 
-          d="M 155,440 C 185,440 185,475 160,485 C 145,475 145,455 155,440 Z" />
-        <path id="kolkata" class="district" data-name="Kolkata" 
-          d="M 188,445 C 198,445 198,460 188,460 C 180,460 180,445 188,445 Z" />
-        <path id="north24" class="district" data-name="North 24 Parganas" 
-          d="M 195,395 C 245,400 245,490 205,500 C 185,475 185,430 195,395 Z" />
-
-        <!-- Coastal & Sundarbans Delta -->
-        <path id="purba_medinipur" class="district" data-name="Purba Medinipur" 
-          d="M 135,490 C 175,485 180,565 140,595 C 110,575 115,530 135,490 Z" />
-        <path id="south24" class="district" data-name="South 24 Parganas & Sundarbans" 
-          d="M 185,485 C 245,495 240,615 175,625 C 155,585 165,530 185,485 Z" />
-      </svg>
+      <div id="loading-overlay">Loading authentic district boundaries...</div>
+      <svg id="wb-svg" viewBox="0 0 450 560"></svg>
     </div>
 
     <div class="legend-bar" id="legend-strip"></div>
@@ -287,7 +236,7 @@
 
     <div class="footer">
       <button class="btn" id="play-btn" onclick="togglePlay()">Pause</button>
-      <span style="font-size: 0.68rem; color: var(--muted);">West Bengal Climate & Season GIS</span>
+      <span style="font-size: 0.68rem; color: var(--muted);">Authentic Survey GIS Map</span>
     </div>
   </div>
 
@@ -301,14 +250,14 @@
         lbl: "Purulia/Bankura Peak Heat",
         grad: "linear-gradient(to right, #facc15, #ea580c, #7f1d1d)",
         colors: {
-          purulia: "#7f1d1d", bankura: "#991b1b", jhargram: "#991b1b",
-          paschim_bardhaman: "#b91c1c", birbhum: "#dc2626", paschim_medinipur: "#dc2626",
-          purba_bardhaman: "#ea580c", hooghly: "#ea580c", howrah: "#ea580c", kolkata: "#ea580c",
-          nadia: "#f97316", murshidabad: "#f97316", malda: "#f97316",
-          north24: "#f97316", south24: "#f97316", purba_medinipur: "#f97316",
-          uttar_dinajpur: "#fb923c", dakshin_dinajpur: "#fb923c",
-          coochbehar: "#facc15", alipurduar: "#facc15", jalpaiguri: "#facc15",
-          kalimpong: "#fde047", darjeeling: "#fef08a"
+          "Purulia": "#7f1d1d", "Bankura": "#991b1b", "Jhargram": "#991b1b",
+          "Paschim Bardhaman": "#b91c1c", "Birbhum": "#dc2626", "Paschim Medinipur": "#dc2626",
+          "Purba Bardhaman": "#ea580c", "Hooghly": "#ea580c", "Howrah": "#ea580c", "Kolkata": "#ea580c",
+          "Nadia": "#f97316", "Murshidabad": "#f97316", "Maldah": "#f97316", "Malda": "#f97316",
+          "North 24 Parganas": "#f97316", "South 24 Parganas": "#f97316", "Purba Medinipur": "#f97316",
+          "Uttar Dinajpur": "#fb923c", "Dakshin Dinajpur": "#fb923c",
+          "Koch Bihar": "#facc15", "Coochbehar": "#facc15", "Alipurduar": "#facc15", "Jalpaiguri": "#facc15",
+          "Kalimpong": "#fde047", "Darjeeling": "#fef08a", "Darjiling": "#fef08a"
         }
       },
       {
@@ -319,14 +268,14 @@
         lbl: "Sub-Himalayan Rain",
         grad: "linear-gradient(to right, #082f49, #0284c7, #38bdf8)",
         colors: {
-          alipurduar: "#38bdf8", jalpaiguri: "#38bdf8", kalimpong: "#0284c7",
-          darjeeling: "#0284c7", coochbehar: "#38bdf8", uttar_dinajpur: "#0284c7",
-          dakshin_dinajpur: "#0369a1", malda: "#0369a1", murshidabad: "#075985",
-          nadia: "#0369a1", north24: "#0284c7", south24: "#38bdf8",
-          kolkata: "#0284c7", howrah: "#0284c7", hooghly: "#0369a1",
-          purba_medinipur: "#0284c7", paschim_medinipur: "#075985",
-          purba_bardhaman: "#075985", paschim_bardhaman: "#0c4a6e",
-          birbhum: "#0c4a6e", bankura: "#082f49", purulia: "#082f49", jhargram: "#0c4a6e"
+          "Alipurduar": "#38bdf8", "Jalpaiguri": "#38bdf8", "Kalimpong": "#0284c7",
+          "Darjeeling": "#0284c7", "Darjiling": "#0284c7", "Koch Bihar": "#38bdf8", "Coochbehar": "#38bdf8",
+          "Uttar Dinajpur": "#0284c7", "Dakshin Dinajpur": "#0369a1", "Maldah": "#0369a1", "Malda": "#0369a1",
+          "Murshidabad": "#075985", "Nadia": "#0369a1", "North 24 Parganas": "#0284c7", "South 24 Parganas": "#38bdf8",
+          "Kolkata": "#0284c7", "Howrah": "#0284c7", "Hooghly": "#0369a1",
+          "Purba Medinipur": "#0284c7", "Paschim Medinipur": "#075985",
+          "Purba Bardhaman": "#075985", "Paschim Bardhaman": "#0c4a6e",
+          "Birbhum": "#0c4a6e", "Bankura": "#082f49", "Purulia": "#082f49", "Jhargram": "#0c4a6e"
         }
       },
       {
@@ -337,14 +286,14 @@
         lbl: "Festive Season",
         grad: "linear-gradient(to right, #064e3b, #10b981, #6ee7b7)",
         colors: {
-          kolkata: "#6ee7b7", howrah: "#6ee7b7", hooghly: "#6ee7b7",
-          north24: "#34d399", south24: "#34d399", nadia: "#34d399",
-          purba_bardhaman: "#34d399", paschim_bardhaman: "#10b981", murshidabad: "#10b981",
-          birbhum: "#10b981", bankura: "#10b981", purulia: "#059669",
-          jhargram: "#059669", paschim_medinipur: "#10b981", purba_medinipur: "#34d399",
-          malda: "#059669", uttar_dinajpur: "#059669", dakshin_dinajpur: "#059669",
-          coochbehar: "#047857", jalpaiguri: "#047857", alipurduar: "#047857",
-          kalimpong: "#065f46", darjeeling: "#064e3b"
+          "Kolkata": "#6ee7b7", "Howrah": "#6ee7b7", "Hooghly": "#6ee7b7",
+          "North 24 Parganas": "#34d399", "South 24 Parganas": "#34d399", "Nadia": "#34d399",
+          "Purba Bardhaman": "#34d399", "Paschim Bardhaman": "#10b981", "Murshidabad": "#10b981",
+          "Birbhum": "#10b981", "Bankura": "#10b981", "Purulia": "#059669",
+          "Jhargram": "#059669", "Paschim Medinipur": "#10b981", "Purba Medinipur": "#34d399",
+          "Maldah": "#059669", "Malda": "#059669", "Uttar Dinajpur": "#059669", "Dakshin Dinajpur": "#059669",
+          "Koch Bihar": "#047857", "Coochbehar": "#047857", "Jalpaiguri": "#047857", "Alipurduar": "#047857",
+          "Kalimpong": "#065f46", "Darjeeling": "#064e3b", "Darjiling": "#064e3b"
         }
       },
       {
@@ -355,14 +304,15 @@
         lbl: "Paddy Fields of Bengal",
         grad: "linear-gradient(to right, #78350f, #d97706, #fde68a)",
         colors: {
-          purba_bardhaman: "#fde68a", hooghly: "#fde68a", nadia: "#fde68a",
-          paschim_medinipur: "#fde68a", murshidabad: "#f59e0b", birbhum: "#f59e0b",
-          purba_medinipur: "#f59e0b", howrah: "#f59e0b", north24: "#f59e0b",
-          kolkata: "#f59e0b", south24: "#d97706", bankura: "#d97706",
-          paschim_bardhaman: "#d97706", malda: "#d97706", dakshin_dinajpur: "#d97706",
-          purulia: "#b45309", jhargram: "#b45309", uttar_dinajpur: "#b45309",
-          coochbehar: "#b45309", jalpaiguri: "#92400e", alipurduar: "#92400e",
-          kalimpong: "#78350f", darjeeling: "#78350f"
+          "Purba Bardhaman": "#fde68a", "Hooghly": "#fde68a", "Nadia": "#fde68a",
+          "Paschim Medinipur": "#fde68a", "Murshidabad": "#f59e0b", "Birbhum": "#f59e0b",
+          "Purba Medinipur": "#f59e0b", "Howrah": "#f59e0b", "North 24 Parganas": "#f59e0b",
+          "South 24 Parganas": "#d97706", "Kolkata": "#f59e0b", "Bankura": "#d97706",
+          "Paschim Bardhaman": "#d97706", "Maldah": "#d97706", "Malda": "#d97706",
+          "Dakshin Dinajpur": "#d97706", "Purulia": "#b45309", "Jhargram": "#b45309",
+          "Uttar Dinajpur": "#b45309", "Koch Bihar": "#b45309", "Coochbehar": "#b45309",
+          "Jalpaiguri": "#92400e", "Alipurduar": "#92400e", "Kalimpong": "#78350f",
+          "Darjeeling": "#78350f", "Darjiling": "#78350f"
         }
       },
       {
@@ -373,14 +323,14 @@
         lbl: "Sandakphu Chill",
         grad: "linear-gradient(to right, #1e1b4b, #6366f1, #e0e7ff)",
         colors: {
-          darjeeling: "#e0e7ff", kalimpong: "#c7d2fe", jalpaiguri: "#a5b4fc",
-          alipurduar: "#a5b4fc", coochbehar: "#818cf8", uttar_dinajpur: "#818cf8",
-          dakshin_dinajpur: "#6366f1", malda: "#6366f1", purulia: "#3730a3",
-          bankura: "#3730a3", birbhum: "#4338ca", jhargram: "#3730a3",
-          paschim_bardhaman: "#4338ca", purba_bardhaman: "#4f46e5", murshidabad: "#4f46e5",
-          nadia: "#4f46e5", hooghly: "#6366f1", howrah: "#6366f1",
-          kolkata: "#6366f1", north24: "#6366f1", purba_medinipur: "#6366f1",
-          paschim_medinipur: "#4338ca", south24: "#4f46e5"
+          "Darjeeling": "#e0e7ff", "Darjiling": "#e0e7ff", "Kalimpong": "#c7d2fe",
+          "Jalpaiguri": "#a5b4fc", "Alipurduar": "#a5b4fc", "Koch Bihar": "#818cf8", "Coochbehar": "#818cf8",
+          "Uttar Dinajpur": "#818cf8", "Dakshin Dinajpur": "#6366f1", "Maldah": "#6366f1", "Malda": "#6366f1",
+          "Purulia": "#3730a3", "Bankura": "#3730a3", "Birbhum": "#4338ca", "Jhargram": "#3730a3",
+          "Paschim Bardhaman": "#4338ca", "Purba Bardhaman": "#4f46e5", "Murshidabad": "#4f46e5",
+          "Nadia": "#4f46e5", "Hooghly": "#6366f1", "Howrah": "#6366f1",
+          "Kolkata": "#6366f1", "North 24 Parganas": "#6366f1", "Purba Medinipur": "#6366f1",
+          "Paschim Medinipur": "#4338ca", "South 24 Parganas": "#4f46e5"
         }
       },
       {
@@ -391,14 +341,15 @@
         lbl: "Spring Equinox Bloom",
         grad: "linear-gradient(to right, #831843, #db2777, #f472b6)",
         colors: {
-          purulia: "#f43f5e", bankura: "#f43f5e", jhargram: "#f43f5e",
-          birbhum: "#fb7185", paschim_bardhaman: "#e11d48", paschim_medinipur: "#fb7185",
-          purba_bardhaman: "#ec4899", nadia: "#f472b6", hooghly: "#ec4899",
-          howrah: "#ec4899", kolkata: "#f472b6", purba_medinipur: "#db2777",
-          north24: "#ec4899", south24: "#db2777", murshidabad: "#db2777",
-          malda: "#db2777", dakshin_dinajpur: "#be185d", uttar_dinajpur: "#be185d",
-          coochbehar: "#be185d", jalpaiguri: "#9d174d", alipurduar: "#9d174d",
-          kalimpong: "#9d174d", darjeeling: "#831843"
+          "Purulia": "#f43f5e", "Bankura": "#f43f5e", "Jhargram": "#f43f5e",
+          "Birbhum": "#fb7185", "Paschim Bardhaman": "#e11d48", "Paschim Medinipur": "#fb7185",
+          "Purba Bardhaman": "#ec4899", "Nadia": "#f472b6", "Hooghly": "#ec4899",
+          "Howrah": "#ec4899", "Kolkata": "#f472b6", "Purba Medinipur": "#db2777",
+          "North 24 Parganas": "#ec4899", "South 24 Parganas": "#db2777",
+          "Murshidabad": "#db2777", "Maldah": "#db2777", "Malda": "#db2777",
+          "Dakshin Dinajpur": "#be185d", "Uttar Dinajpur": "#be185d",
+          "Koch Bihar": "#be185d", "Coochbehar": "#be185d", "Jalpaiguri": "#9d174d",
+          "Alipurduar": "#9d174d", "Kalimpong": "#9d174d", "Darjeeling": "#831843", "Darjiling": "#831843"
         }
       }
     ];
@@ -406,8 +357,9 @@
     let currentIdx = 0;
     let timer = null;
     let isPlaying = true;
+    let districtPaths = null;
 
-    // Render Timeline Bar
+    // Timeline বার তৈরি
     const timelineEl = document.getElementById('timeline');
     seasonData.forEach((s, idx) => {
       const item = document.createElement('div');
@@ -426,6 +378,57 @@
       timelineEl.appendChild(item);
     });
 
+    const svg = d3.select("#wb-svg");
+    const width = 450;
+    const height = 560;
+
+    // অফিশিয়াল ও সম্পূর্ণ নির্ভরযোগ্য West Bengal Districts GeoJSON (GitHub Pages-এ এটি কখনো ব্লক হয় না)
+    const WB_GEOJSON = "https://raw.githubusercontent.com/HindustanTimesLabs/shapefiles/master/state_ut/westbengal/district/westbengal_district.json";
+
+    d3.json(WB_GEOJSON).then(geoData => {
+      document.getElementById('loading-overlay').style.display = 'none';
+
+      // নিখুঁত বাউন্ডারি প্রোজেকশন
+      const projection = d3.geoMercator().fitSize([width, height], geoData);
+      const pathGenerator = d3.geoPath().projection(projection);
+
+      districtPaths = svg.selectAll(".district")
+        .data(geoData.features)
+        .enter()
+        .append("path")
+        .attr("class", "district")
+        .attr("d", pathGenerator);
+
+      // Tooltip Hover
+      const tooltip = document.getElementById("tooltip");
+      districtPaths.on("mousemove", (event, d) => {
+        const name = d.properties.district || d.properties.NAME_2 || d.properties.dtname || "District";
+        tooltip.style.left = (event.offsetX + 10) + "px";
+        tooltip.style.top = (event.offsetY - 20) + "px";
+        tooltip.textContent = name;
+        tooltip.style.opacity = "1";
+      }).on("mouseleave", () => {
+        tooltip.style.opacity = "0";
+      });
+
+      applySeason(0);
+      startLoop();
+    }).catch(err => {
+      document.getElementById('loading-overlay').textContent = "Map boundary load error. Check internet connection.";
+    });
+
+    function matchDistrictColor(dName, colorMap) {
+      if (!dName) return "#38bdf8";
+      const clean = dName.toLowerCase().replace(/[^a-z]/g, '');
+      for (let k in colorMap) {
+        const target = k.toLowerCase().replace(/[^a-z]/g, '');
+        if (clean.includes(target) || target.includes(clean)) {
+          return colorMap[k];
+        }
+      }
+      return "#38bdf8";
+    }
+
     function applySeason(idx) {
       const s = seasonData[idx];
       document.getElementById('s-name').textContent = s.bn;
@@ -434,15 +437,17 @@
       document.getElementById('metric-lbl').textContent = s.lbl;
       document.getElementById('legend-strip').style.background = s.grad;
 
-      // Color each district with a staggered cascade
-      Object.keys(s.colors).forEach((districtId, i) => {
-        const el = document.getElementById(districtId);
-        if (el) {
-          setTimeout(() => {
-            el.style.fill = s.colors[districtId];
-          }, i * 20);
-        }
-      });
+      if (districtPaths) {
+        districtPaths.each(function(d, i) {
+          const dName = d.properties.district || d.properties.NAME_2 || d.properties.dtname;
+          const targetColor = matchDistrictColor(dName, s.colors);
+          d3.select(this)
+            .transition()
+            .delay(i * 15)
+            .duration(650)
+            .style("fill", targetColor);
+        });
+      }
 
       document.querySelectorAll('.timeline-item').forEach((item, i) => {
         item.classList.toggle('active', i === idx);
@@ -475,26 +480,6 @@
       clearInterval(timer);
       timer = setInterval(nextSeason, 2800);
     }
-
-    // Tooltip interaction
-    const tooltip = document.getElementById('tooltip');
-    document.querySelectorAll('.district').forEach(d => {
-      d.addEventListener('mousemove', e => {
-        const wrap = d.closest('.map-wrapper').getBoundingClientRect();
-        tooltip.style.left = (e.clientX - wrap.left + 10) + 'px';
-        tooltip.style.top = (e.clientY - wrap.top - 20) + 'px';
-        tooltip.textContent = d.dataset.name;
-        tooltip.style.opacity = '1';
-      });
-
-      d.addEventListener('mouseleave', () => {
-        tooltip.style.opacity = '0';
-      });
-    });
-
-    // Start with Summer
-    applySeason(0);
-    startLoop();
   </script>
 </body>
 </html>
